@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico CDA Curramba 2.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
+.app{max-width:820px;margin:0 auto;padding:1rem}
+.view{display:none}.view.active{display:block}
+.header{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;border:1px solid #e5e5e0;text-align:center}
+.header-tag{display:inline-block;background:#e6f1fb;color:#185fa5;font-size:11px;padding:3px 10px;border-radius:20px;margin-bottom:.5rem}
+.header h1{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
+.header p{font-size:13px;color:#666}
+.card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:1.25rem;margin-bottom:.75rem}
+.sec-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem;padding-bottom:6px;border-bottom:1px solid #f0f0ec}
+.field{margin-bottom:1rem}
+label{font-size:13px;color:#1a1a1a;display:block;margin-bottom:6px;line-height:1.5;font-weight:500}
+.hint{font-size:12px;color:#888;font-weight:400}
+input,select,textarea{width:100%;font-size:14px;padding:8px 12px;border:1px solid #d0d0c8;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:#378add}
+textarea{height:64px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{padding:6px 13px;border:1px solid #d0d0c8;border-radius:20px;font-size:12px;cursor:pointer;color:#666;transition:all .15s;user-select:none;background:#fff}
+.chip.on{background:#e6f1fb;border-color:#378add;color:#185fa5}
+.ropt{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border:1px solid #e5e5e0;border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:5px;background:#fff}
+.ropt:hover{border-color:#378add}
+.ropt.sel{background:#e6f1fb;border-color:#378add}
+.ropt span{font-size:13px;color:#1a1a1a;line-height:1.5}
+.ropt.sel span{color:#185fa5}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;padding-top:1rem;border-top:1px solid #f0f0ec}
+.nav-info{font-size:12px;color:#888}
+.prog{height:3px;background:#f0f0ec;border-radius:2px;margin-bottom:1.5rem;overflow:hidden}
+.prog-bar{height:100%;background:#378add;transition:width .3s;border-radius:2px}
+.btn{padding:9px 18px;border:1px solid #d0d0c8;border-radius:8px;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:#378add;background:#f0f7ff}
+.btn-primary{background:#185fa5;border-color:#185fa5;color:#fff;font-weight:500}
+.btn-primary:hover{background:#0f4580;border-color:#0f4580}
+.acard{border:1px solid #d0d0c8;border-radius:12px;padding:1rem;cursor:pointer;transition:all .15s;background:#fff}
+.acard:hover{border-color:#378add;background:#f7fbff}
+.acard.sel{background:#e6f1fb;border-color:#378add}
+.acard-icon{font-size:22px;margin-bottom:6px}
+.acard-name{font-size:14px;font-weight:600;color:#1a1a1a}
+.acard-desc{font-size:12px;color:#888;margin-top:2px}
+.acard.sel .acard-name,.acard.sel .acard-desc{color:#185fa5}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;margin:2px}
+.b-ok{background:#eaf3de;color:#3b6d11}
+.b-warn{background:#faeeda;color:#ba7517}
+.b-info{background:#e6f1fb;color:#185fa5}
+.b-err{background:#fcebeb;color:#a32d2d}
+.met-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.met{background:#f5f5f0;border-radius:8px;padding:.75rem;text-align:center}
+.met .v{font-size:22px;font-weight:600;color:#1a1a1a}
+.met .l{font-size:11px;color:#888;margin-top:2px}
+.rcrd{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:1.1rem;margin-bottom:.65rem}
+.rcrd h4{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:6px}
+.rcrd p,.rcrd li{font-size:13px;color:#555;line-height:1.65}
+.rcrd ul{padding-left:16px;margin-top:4px}
+.divider{height:1px;background:#f0f0ec;margin:.75rem 0}
+.spin{display:inline-block;width:20px;height:20px;border:2px solid #e0e0e0;border-top-color:#378add;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.step-hdr{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
+.step-sub{font-size:13px;color:#666;margin-bottom:1.25rem;line-height:1.5}
+.tag{display:inline-block;background:#e6f1fb;color:#185fa5;font-size:11px;padding:2px 10px;border-radius:20px;margin-bottom:.75rem}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.home-card{border:1px solid #d0d0c8;border-radius:12px;padding:1.1rem;cursor:pointer;transition:all .15s;background:#fff}
+.home-card:hover{border-color:#378add;background:#f7fbff}
+.home-card-icon{font-size:28px;margin-bottom:8px}
+.home-card-title{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.home-card-desc{font-size:12px;color:#888;line-height:1.5}
+.ee-row{display:flex;align-items:flex-start;justify-content:space-between;padding:12px;border:1px solid #e5e5e0;border-radius:8px;margin-bottom:6px;gap:8px;flex-wrap:wrap;background:#fff}
+.actor-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.actor-pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid #d0d0c8;color:#888}
+.actor-pill.filled{background:#eaf3de;border-color:#3b6d11;color:#3b6d11}
+.gracias-box{text-align:center;padding:3rem 1rem}
+.gracias-icon{font-size:56px;margin-bottom:1rem}
+.gracias-title{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:.5rem}
+.gracias-sub{font-size:14px;color:#666;line-height:1.7;max-width:420px;margin:0 auto 1.5rem}
+.panel-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.panel-tab{padding:7px 14px;border:1px solid #d0d0c8;border-radius:20px;font-size:12px;cursor:pointer;color:#666;transition:all .15s;background:#fff}
+.panel-tab.active{background:#e6f1fb;border-color:#378add;color:#185fa5;font-weight:500}
+.panel-section{display:none}.panel-section.active{display:block}
+.bar-wrap{margin-bottom:8px}
+.bar-label{font-size:12px;color:#1a1a1a;margin-bottom:3px}
+.bar-bg{height:18px;background:#f0f0ec;border-radius:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;background:#378add}
+.bar-pct{font-size:11px;color:#888;margin-top:2px;text-align:right}
+.semaforo{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.s-verde{background:#3b6d11}.s-amarillo{background:#ba7517}.s-rojo{background:#a32d2d}
+.heatmap-cell{padding:4px 6px;border-radius:4px;font-size:11px;font-weight:500;text-align:center}
+.hc1{background:#fcebeb;color:#a32d2d}.hc2{background:#faeeda;color:#ba7517}.hc3{background:#eaf3de;color:#3b6d11}.hc4{background:#c0dd97;color:#27500a}
+.loading-state{text-align:center;padding:2rem;font-size:14px;color:#666}
+.error-msg{background:#fcebeb;color:#a32d2d;border-radius:8px;padding:1rem;font-size:13px;margin-top:.5rem}
+.success-msg{background:#eaf3de;color:#3b6d11;border-radius:8px;padding:1rem;font-size:13px;margin-top:.5rem}
+@media(max-width:520px){.g2,.g3,.home-grid{grid-template-columns:1fr}.met-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-tag">CDA Curramba 2.0 · PTAFI 3.0 · Momento I 2026</div>
+  <h1>Diagnóstico contextual de EE</h1>
+  <p>Departamento de Bolívar · Instrumento participativo</p>
+</div>
+
+<!-- HOME -->
+<div class="view active" id="v-home">
+  <div class="home-grid">
+    <div class="home-card" onclick="showView('v-s0')">
+      <div class="home-card-icon">📋</div>
+      <div class="home-card-title">Responder encuesta</div>
+      <div class="home-card-desc">Docentes, estudiantes, familias y directivos responden sobre su EE. Tus respuestas son confidenciales.</div>
+    </div>
+    <div class="home-card" onclick="showView('v-pin')">
+      <div class="home-card-icon">📊</div>
+      <div class="home-card-title">Panel CDA — Tutor/a</div>
+      <div class="home-card-desc">Acceso exclusivo. Ver análisis, gráficas y plan de formación integral.</div>
+    </div>
+  </div>
+  <div id="home-stats"></div>
+</div>
+
+<!-- PIN -->
+<div class="view" id="v-pin">
+  <div class="card" style="max-width:400px;margin:2rem auto">
+    <div class="sec-title">Acceso tutor/a — CDA Curramba 2.0</div>
+    <div class="field"><label>Código de acceso</label><input type="password" id="pin-input" placeholder="Ingresa el código" style="max-width:240px"><div id="pin-error" style="font-size:12px;color:#a32d2d;margin-top:4px;display:none">Código incorrecto.</div></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="checkPin()">Ingresar →</button><button class="btn" onclick="showView('v-home')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- S0: Rol + EE -->
+<div class="view" id="v-s0">
+  <div class="prog"><div class="prog-bar" style="width:8%"></div></div>
+  <div class="tag">Paso 1 de 6</div>
+  <div class="step-hdr">¿Quién responde y de qué colegio?</div>
+  <div class="step-sub">Selecciona tu rol — las preguntas serán completamente diferentes según quién eres</div>
+  <div class="card">
+    <div class="sec-title">Tu rol en la comunidad educativa</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem">
+      <div class="acard" onclick="selActor('rector',this)"><div class="acard-icon">🏫</div><div class="acard-name">Rector/a o directivo/a</div><div class="acard-desc">Coordinador/a, directivo docente</div></div>
+      <div class="acard" onclick="selActor('docente',this)"><div class="acard-icon">📚</div><div class="acard-name">Docente</div><div class="acard-desc">Docente de área o de CI</div></div>
+      <div class="acard" onclick="selActor('estudiante',this)"><div class="acard-icon">🎒</div><div class="acard-name">Estudiante</div><div class="acard-desc">Cualquier grado</div></div>
+      <div class="acard" onclick="selActor('familia',this)"><div class="acard-icon">👨‍👩‍👧</div><div class="acard-name">Familia / acudiente</div><div class="acard-desc">Padre, madre, acudiente</div></div>
+    </div>
+    <div class="sec-title">Datos del establecimiento</div>
+    <div class="g2">
+      <div class="field"><label>Nombre del EE</label><input type="text" id="ee_nombre" placeholder="Nombre de la institución"></div>
+      <div class="field"><label>Municipio</label><input type="text" id="municipio" placeholder="Municipio"></div>
+    </div>
+    <div class="g2">
+      <div class="field"><label>Subregión</label>
+        <select id="subregion"><option value="">Seleccionar...</option><option>ZODES Dique</option><option>ZODES Montes de María</option><option>ZODES Depresión Momposina</option><option>ZODES Loba</option><option>ZODES Magdalena Medio</option><option>ZODES Mojana</option><option>Cartagena y área metropolitana</option></select>
+      </div>
+      <div class="field"><label>Zona</label>
+        <select id="zona"><option value="">Seleccionar...</option><option>Rural dispersa</option><option>Rural concentrada</option><option>Urbana</option><option>Rural-urbana (mixta)</option><option>Zona insular o ribereña</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button class="btn" onclick="showView('v-home')">← Inicio</button><span class="nav-info">Paso 1 de 6</span><button class="btn btn-primary" onclick="irS1()">Continuar →</button></div>
+</div>
+
+<!-- SECCIONES DINÁMICAS -->
+<div class="view" id="v-s1"><div class="prog"><div class="prog-bar" style="width:25%"></div></div><div id="s1-content"></div><div class="nav" id="s1-nav"></div></div>
+<div class="view" id="v-s2"><div class="prog"><div class="prog-bar" style="width:42%"></div></div><div id="s2-content"></div><div class="nav" id="s2-nav"></div></div>
+<div class="view" id="v-s3"><div class="prog"><div class="prog-bar" style="width:59%"></div></div><div id="s3-content"></div><div class="nav" id="s3-nav"></div></div>
+<div class="view" id="v-s4"><div class="prog"><div class="prog-bar" style="width:76%"></div></div><div id="s4-content"></div><div class="nav" id="s4-nav"></div></div>
+<div class="view" id="v-s5"><div class="prog"><div class="prog-bar" style="width:92%"></div></div><div id="s5-content"></div><div class="nav" id="s5-nav"></div></div>
+
+<!-- GRACIAS -->
+<div class="view" id="v-gracias">
+  <div class="gracias-box">
+    <div class="gracias-icon">✅</div>
+    <div class="gracias-title">¡Gracias por tu participación!</div>
+    <div class="gracias-sub">Tu respuesta fue registrada de forma confidencial. Tu voz es clave para mejorar la educación en tu comunidad. Puedes invitar a otras personas a responder.</div>
+    <button class="btn btn-primary" onclick="resetForm()">Otra persona quiere responder</button>
+  </div>
+</div>
+
+<!-- PANEL CDA -->
+<div class="view" id="v-panel">
+  <div class="tag">Panel exclusivo — Tutor/a CDA Curramba 2.0</div>
+  <div class="step-hdr">Panel CDA Curramba 2.0</div>
+  <div class="step-sub">PTAFI 3.0 · Momento I 2026 · Departamento de Bolívar</div>
+  <div id="panel-stats" class="met-grid"></div>
+  <div class="panel-tabs">
+    <div class="panel-tab active" onclick="switchTab('tab-ee')">EE registrados</div>
+    <div class="panel-tab" onclick="switchTab('tab-semaforo')">Semáforo alineación</div>
+    <div class="panel-tab" onclick="switchTab('tab-intereses')">Intereses estudiantes</div>
+    <div class="panel-tab" onclick="switchTab('tab-necesidades')">Ranking necesidades</div>
+    <div class="panel-tab" onclick="switchTab('tab-calor')">Mapa de calor</div>
+    <div class="panel-tab" onclick="switchTab('tab-cda')">Análisis general CDA</div>
+  </div>
+  <div class="panel-section active" id="tab-ee"><div class="card"><div class="sec-title">Establecimientos educativos</div><div id="panel-list"></div></div></div>
+  <div class="panel-section" id="tab-semaforo"><div class="card"><div class="sec-title">Nivel de alineación directiva por EE</div><div id="semaforo-content"></div></div></div>
+  <div class="panel-section" id="tab-intereses"><div class="card"><div class="sec-title">Intereses comunes de estudiantes en la CDA</div><div id="intereses-content"></div></div></div>
+  <div class="panel-section" id="tab-necesidades"><div class="card"><div class="sec-title">Ranking de necesidades formativas — toda la CDA</div><div id="necesidades-content"></div></div></div>
+  <div class="panel-section" id="tab-calor"><div class="card"><div class="sec-title">Mapa de calor por dimensión y EE</div><div id="calor-content"></div></div></div>
+  <div class="panel-section" id="tab-cda">
+    <div class="card"><div class="sec-title">Análisis general de la CDA Curramba 2.0</div>
+      <p style="font-size:13px;color:#666;margin-bottom:1rem">Genera análisis comparativo de todos los EE con Plan de Formación Integral.</p>
+      <button class="btn btn-primary" onclick="analizarCDA()">Generar análisis general CDA ↗</button>
+      <div id="cda-result" style="margin-top:1rem"></div>
+    </div>
+  </div>
+  <div class="nav" style="margin-top:.5rem"><button class="btn" onclick="showView('v-home')">← Inicio</button><span></span><button class="btn" onclick="loadPanel()">Actualizar ↗</button></div>
+</div>
+
+<!-- RESULTADO POR EE -->
+<div class="view" id="v-result">
+  <div id="result-content"></div>
+  <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn" onclick="showView('v-panel')">← Volver al panel</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN — REEMPLAZA ESTOS VALORES
+// ============================================================
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWuvZOemjW4FuUo_PiMpqvADbWZ2iYjsLm_tOKvSWt_M01MjZM4pB-rUqmZmFHPdEw2Q/exec';
+const ANTHROPIC_API_KEY = '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';
+const PIN_OK = 'CDA2026';
+// ============================================================
+
+let actor = '';
+
+const SECS = {
+  estudiante:[
+    {titulo:'Intereses y actividades',sub:'¿Qué quieres encontrar en tu colegio?',campos:[
+      {id:'e_act',t:'chips',label:'¿Qué actividades te gustaría que la escuela ofreciera más?',opts:['Talleres deportivos','Clases de música y arte','Proyectos tecnológicos','Programas de emprendimiento','Actividades de liderazgo','Huertas escolares o proyectos agropecuarios','Eventos culturales y folclóricos','Espacios para reforzar materias']},
+      {id:'e_proy',t:'chips',label:'¿Qué proyectos comunitarios deberían impulsarse desde la escuela?',opts:['Reforestación y cuidado del medio ambiente','Ferias agropecuarias y gastronómicas','Talleres de oficios y emprendimiento','Cultura y arte locales','Actividades deportivas abiertas a la comunidad']},
+      {id:'e_apr',t:'radio',g:'e_ap',label:'¿Cómo prefieres aprender nuevas cosas?',opts:['A través de videos y tecnología','Mediante actividades prácticas y experimentos','Con clases tradicionales','Trabajando en equipo']},
+      {id:'e_hab',t:'chips',label:'¿Qué nueva habilidad te gustaría aprender?',opts:['Programación y tecnología','Agricultura sostenible','Música y danza','Primeros auxilios y salud','Diseño y artes gráficas','Cocina y gastronomía']},
+    ]},
+    {titulo:'Centros de Interés — tu experiencia',sub:'¿Qué sabes y vives de los CI en tu colegio?',campos:[
+      {id:'e_ci_conoce',t:'radio',g:'e_cic',label:'¿Conoces los Centros de Interés (CI) que existen en tu colegio?',opts:['Sí, conozco todos los CI que hay','Conozco algunos pero no todos','He escuchado de ellos pero no los conozco bien','No sabía que existían']},
+      {id:'e_ci_participa',t:'radio',g:'e_cip',label:'¿Participas o has participado en algún Centro de Interés?',opts:['Sí, participo actualmente','Sí, participé antes pero ya no','No he participado pero me gustaría','No me interesa participar']},
+      {id:'e_ci_impacto',t:'radio',g:'e_cii',label:'¿Los CI han mejorado tu aprendizaje o bienestar en el colegio?',opts:['Sí, mucho — aprendo cosas que no están en las clases normales','Algo — tienen algún efecto positivo','Poco — no he notado mucha diferencia','No he participado para saberlo']},
+      {id:'e_ci_importancia',t:'radio',g:'e_cim',label:'¿Qué tan importantes son los CI para la formación integral?',opts:['Muy importantes — parte esencial de la educación','Importantes — complementan bien las clases','Poco importantes','No sé qué es la formación integral']},
+      {id:'e_ci_nuevo',t:'chips',label:'¿Qué CI nuevo necesita tu colegio?',opts:['Club de música o danza','Semillero deportivo','Proyecto ambiental o huerta','Robótica o tecnología','Taller de emprendimiento','Arte y creatividad','Club de lectura y escritura','Proyecto agropecuario']},
+      {id:'e_fi',t:'radio',g:'e_fi',label:'¿Sientes que el colegio te forma de manera integral?',opts:['Sí, me forma como persona en muchos aspectos','Algo, aunque falta más énfasis en lo emocional','No mucho, todo se enfoca en las notas','No, solo importa lo académico']},
+    ]},
+    {titulo:'Educación sexual y formación afectiva',sub:'',campos:[
+      {id:'e_es1',t:'radio',g:'e_e1',label:'¿Recibes educación sexual en la escuela?',opts:['Sí, de manera clara y suficiente','Sí, pero me gustaría que fuera más completa','No, apenas se menciona el tema','No, nunca hemos recibido educación sexual']},
+      {id:'e_es2',t:'radio',g:'e_e2',label:'¿Los docentes orientan adecuadamente sobre educación sexual y afectiva?',opts:['Sí, explican con claridad y sin tabúes','A veces, pero falta más información','No, evitan el tema o lo tratan superficialmente','No estoy seguro/a']},
+      {id:'e_inf',t:'radio',g:'e_inf',label:'¿Sientes que tienes suficiente información sobre educación sexual?',opts:['Sí, me siento bien informado/a','Algo, pero me gustaría aprender más','No, necesito más información']},
+      {id:'e_fuente',t:'chips',label:'¿Dónde sueles obtener información sobre educación sexual?',opts:['En la escuela','En la familia','Redes sociales o internet','En conversaciones con amigos/as','De profesionales de la salud']},
+    ]},
+    {titulo:'Bienestar emocional y tu voz',sub:'¿Cómo te sientes en el colegio?',campos:[
+      {id:'e_bien',t:'radio',g:'e_b',label:'¿Cómo te sientes en el entorno escolar?',opts:['Muy bien, me siento feliz y motivado/a','Bien, pero hay aspectos que mejorar','Regular, a veces me siento desmotivado/a','Mal, tengo dificultades para adaptarme']},
+      {id:'e_fact',t:'chips',label:'¿Qué factores afectan más tu bienestar emocional?',opts:['Estrés por el estudio','Problemas familiares','Falta de apoyo emocional','Conflictos con compañeros o docentes','Falta de espacios recreativos']},
+      {id:'e_rel',t:'radio',g:'e_r',label:'¿Cómo es tu relación con tus compañeros?',opts:['Muy buena, me siento respetado/a y apoyado/a','Buena, pero a veces hay conflictos','Regular, no me siento muy cercano/a','Mala, tengo problemas frecuentes']},
+      {id:'e_mejora',t:'chips',label:'Si pudieras mejorar algo en la escuela, ¿qué sería?',opts:['Mejor infraestructura','Más recursos tecnológicos','Más talleres extracurriculares','Mayor apoyo emocional y orientación']},
+      {id:'e_palabra',t:'texto',label:'En una palabra, ¿qué significa la escuela para ti?',ph:'Escribe una palabra...'},
+    ]},
+    {titulo:'',sub:'',campos:[]}
+  ],
+  docente:[
+    {titulo:'Relaciones y comunicación institucional',sub:'¿Cómo es el trabajo en equipo en tu institución?',campos:[
+      {id:'d_rel',t:'radio',g:'d_r',label:'¿Cómo es la relación entre docentes?',opts:['Muy buena, hay trabajo en equipo y apoyo mutuo','Buena, aunque a veces hay dificultades','Regular, cada docente trabaja por su cuenta','Mala, hay conflictos frecuentes']},
+      {id:'d_com',t:'radio',g:'d_c',label:'¿Es necesario fortalecer la comunicación entre docentes y directivos?',opts:['Sí, hacen falta más espacios de diálogo','A veces, depende de la situación','No, la comunicación actual es suficiente']},
+      {id:'d_apoyo',t:'radio',g:'d_a',label:'¿La institución te brinda apoyo y herramientas para tu labor?',opts:['Sí, me siento respaldado/a y con recursos suficientes','Algo, pero hay aspectos por mejorar','No, siento que me falta apoyo y recursos']},
+      {id:'d_rfam',t:'radio',g:'d_rf',label:'¿Cómo es la relación entre docentes y padres de familia?',opts:['Muy buena, hay comunicación y apoyo mutuo','Buena, pero se puede mejorar','Regular, hay poca interacción','Mala, hay conflictos o falta de comunicación']},
+    ]},
+    {titulo:'Centros de Interés — tu práctica docente',sub:'¿Cómo vives los CI en tu práctica pedagógica?',campos:[
+      {id:'d_ci_existe',t:'chips',label:'¿Qué Centros de Interés existen actualmente en el EE?',opts:['Huerta escolar','Club deportivo','Club de música o danza','Club de lectura','Proyecto tecnológico','Proyecto ambiental','Taller de artes','Emprendimiento','Ninguno activo actualmente']},
+      {id:'d_ci_participa',t:'radio',g:'d_cip',label:'¿Participas como facilitador/a en algún Centro de Interés?',opts:['Sí, soy el/la facilitador/a de un CI activo','Sí, apoyo un CI aunque no soy el responsable principal','No, pero me gustaría hacerlo','No participo en CI']},
+      {id:'d_ci_plan',t:'radio',g:'d_cp',label:'¿Articulas los CI con tus planeaciones de aula?',opts:['Sí, sistemáticamente — los CI están en mis planeaciones','A veces — cuando encuentro una conexión clara','Rara vez — no tengo una estrategia definida','No, los CI funcionan separados a mis clases']},
+      {id:'d_ci_pei',t:'radio',g:'d_cpei',label:'¿Los CI están armonizados con el PEI del EE?',opts:['Sí, hay coherencia clara entre el PEI y los CI','Parcialmente — algunos CI están alineados pero no todos','No, los CI funcionan desconectados del PEI','No conozco bien el PEI para saberlo']},
+      {id:'d_ci_transv',t:'radio',g:'d_ct',label:'¿Los CI están articulados con los proyectos transversales (PRAE, PESC, etc.)?',opts:['Sí, hay articulación explícita con los proyectos transversales','Algo — hay coincidencias pero no articulación formal','No, funcionan por separado','No sé si existe esa articulación']},
+      {id:'d_ci_fi',t:'radio',g:'d_fi',label:'¿La formación integral está integrada al currículo o funciona de manera aislada?',opts:['Integrada — permea el currículo y las prácticas de aula','Parcialmente integrada — en algunas áreas o momentos','Aislada — funciona como actividades extracurriculares separadas','No existe una estrategia de formación integral clara']},
+    ]},
+    {titulo:'Bienestar docente y formación',sub:'¿Cómo te sientes y qué necesitas aprender?',campos:[
+      {id:'d_emoc',t:'radio',g:'d_e',label:'¿Cómo te sientes emocionalmente en tu rol de docente?',opts:['Muy bien, motivado/a y con energía','Bien, pero con algunos momentos de estrés','Regular, a veces me siento agotado/a o desmotivado/a','Mal, siento que necesito más apoyo emocional']},
+      {id:'d_cap',t:'chips',label:'¿En qué áreas de formación necesitas mayor capacitación?',opts:['Metodologías activas e innovadoras','Diseño y facilitación de CI','Evaluación formativa','Educación socioemocional','Lectura y escritura en todas las áreas','Resolución de conflictos','Uso de tecnología en educación','Enfoque diferencial e interculturalidad','Articulación curricular y planeación integrada']},
+      {id:'d_mejora',t:'chips',label:'Si pudieras mejorar algo en la escuela, ¿qué sería?',opts:['Mejor infraestructura','Más recursos tecnológicos','Más talleres extracurriculares','Mayor apoyo emocional y orientación']},
+      {id:'d_palabra',t:'texto',label:'En una palabra, ¿qué significa la escuela para ti?',ph:'Escribe una palabra...'},
+    ]},
+    {titulo:'',sub:'',campos:[]},
+    {titulo:'',sub:'',campos:[]}
+  ],
+  familia:[
+    {titulo:'Intereses y participación',sub:'¿Cómo es tu relación con la institución?',campos:[
+      {id:'f_temas',t:'chips',label:'¿Qué temas son importantes que se enseñen en la escuela?',opts:['Valores y disciplina con amor','Educación sexual y afectiva','Uso adecuado de la tecnología','Habilidades socioemocionales y resolución de conflictos','Proyectos productivos y emprendimiento']},
+      {id:'f_par',t:'radio',g:'f_p',label:'¿Qué nivel de interés tienes en participar en actividades de la escuela?',opts:['Muy interesado/a, siempre participo','Interesado/a, pero a veces no puedo asistir','Poco interesado/a','No me interesa participar']},
+      {id:'f_apo',t:'radio',g:'f_a',label:'¿Estarías dispuesto/a a apoyar proyectos de la institución?',opts:['Sí, me interesa participar activamente','Sí, pero solo con aportes económicos o materiales','No, por falta de tiempo o recursos','No me interesa']},
+    ]},
+    {titulo:'Centros de Interés — perspectiva familiar',sub:'¿Qué sabes y piensas de los CI de tu hijo/a?',campos:[
+      {id:'f_ci_conoce',t:'radio',g:'f_cic',label:'¿Conoces los Centros de Interés del colegio de tu hijo/a?',opts:['Sí, los conozco todos','Conozco algunos','He escuchado de ellos pero no los conozco bien','No sabía que existían']},
+      {id:'f_ci_participa',t:'radio',g:'f_cip',label:'¿Tu hijo/a participa en algún Centro de Interés?',opts:['Sí, participa activamente y le gusta','Sí, participa pero con poco entusiasmo','No participa actualmente','No sé si participa o no']},
+      {id:'f_ci_impacto',t:'radio',g:'f_cii',label:'¿Los CI tienen un impacto positivo en el aprendizaje de tu hijo/a?',opts:['Sí, ha mejorado su motivación y aprendizaje','Algo, aunque no ha sido muy notorio','No, no he visto cambios significativos','No puedo evaluarlo porque no participa']},
+      {id:'f_ci_nuevo',t:'chips',label:'¿Qué CI nuevo crees que necesita el colegio?',opts:['Club deportivo','Música o danza','Proyecto ambiental','Tecnología y robótica','Emprendimiento','Arte y creatividad','Proyecto agropecuario','Orientación vocacional']},
+      {id:'f_fi',t:'radio',g:'f_fi',label:'¿El colegio forma a tu hijo/a de manera integral?',opts:['Sí, lo forma como persona en muchos aspectos','Algo, aunque falta más énfasis en lo emocional','No mucho, todo se enfoca en notas','No, solo importa lo académico']},
+    ]},
+    {titulo:'Comunicación y formación familiar',sub:'¿Qué necesitas para apoyar mejor a tu hijo/a?',campos:[
+      {id:'f_com',t:'radio',g:'f_c',label:'¿Cómo es la comunicación entre la escuela y las familias?',opts:['Excelente, constante y efectiva','Buena, pero a veces hay falta de información','Deficiente, me gustaría más comunicación','Muy mala, no me siento informado/a']},
+      {id:'f_rdoc',t:'radio',g:'f_rd',label:'¿Cómo es tu relación con los docentes?',opts:['Muy buena, hay confianza y comunicación abierta','Buena, aunque a veces hay dificultades','Regular, no hay mucha interacción','Mala, hay conflictos o falta de comunicación']},
+      {id:'f_rdir',t:'radio',g:'f_rdi',label:'¿Cómo es tu relación con los directivos?',opts:['Muy buena, son accesibles','Buena, pero podría haber más cercanía','Regular, es difícil comunicarse','Mala, no me siento escuchado/a']},
+      {id:'f_form',t:'chips',label:'¿En qué temas te gustaría recibir talleres?',opts:['Crianza positiva y disciplina con amor','Comunicación asertiva con hijos/as y docentes','Educación emocional y manejo de conflictos','Uso adecuado de la tecnología en la familia','Prevención del bullying y la violencia escolar']},
+      {id:'f_mejora',t:'chips',label:'Si pudieras mejorar algo en la escuela, ¿qué sería?',opts:['Mejor infraestructura','Más recursos tecnológicos','Más talleres extracurriculares','Mayor apoyo emocional']},
+      {id:'f_palabra',t:'texto',label:'En una palabra, ¿qué significa la escuela para ti?',ph:'Escribe una palabra...'},
+    ]},
+    {titulo:'',sub:'',campos:[]},
+    {titulo:'',sub:'',campos:[]}
+  ],
+  rector:[
+    {titulo:'Visión y enfoque educativo',sub:'¿Hacia dónde quiere llevar la educación en su institución?',campos:[
+      {id:'r_vision',t:'texto',label:'¿Cuál es su visión de la educación que quiere construir en este EE en los próximos 3 años?',ph:'Describe brevemente tu visión...'},
+      {id:'r_enfoque',t:'chips',label:'¿Cuál es el enfoque educativo que prioriza en su gestión?',opts:['Educación para el trabajo y el emprendimiento','Educación para la paz y la convivencia','Educación ambiental y relación con el territorio','Educación con identidad cultural y artística','Educación inclusiva y con enfoque diferencial','Educación socioemocional y bienestar integral']},
+      {id:'r_modelo',t:'radio',g:'r_m',label:'¿Cómo describe el modelo pedagógico del EE?',opts:['Claramente definido y todos los docentes lo aplican','Existe pero no todos lo conocen o aplican','Está en construcción o revisión','No está definido con claridad']},
+    ]},
+    {titulo:'Centros de Interés — gestión directiva',sub:'¿Cómo están los CI en su institución?',campos:[
+      {id:'r_ci_lista',t:'texto',label:'¿Qué Centros de Interés existen actualmente en el EE?',ph:'Ej: Huerta escolar, semillero de fútbol, club de lectura...'},
+      {id:'r_ci_num',t:'radio',g:'r_cn',label:'¿Aproximadamente cuántos estudiantes participan en CI?',opts:['Menos del 20%','Entre 20% y 40%','Entre 40% y 60%','Más del 60%']},
+      {id:'r_ci_pei',t:'radio',g:'r_cpei',label:'¿Los CI están armonizados con el PEI del EE?',opts:['Sí, hay coherencia clara y documentada','Parcialmente — se hace pero no está formalizado','En proceso — estamos trabajando en esa articulación','No, los CI funcionan desconectados del PEI']},
+      {id:'r_ci_transv',t:'radio',g:'r_ct',label:'¿Los CI están articulados con los proyectos transversales?',opts:['Sí, hay articulación explícita y planificada','Algo — hay coincidencias pero no articulación formal','No, funcionan por separado','No existe esa articulación actualmente']},
+      {id:'r_ci_plan',t:'radio',g:'r_cpl',label:'¿Los docentes articulan los CI en sus planeaciones de aula?',opts:['Sí, todos los docentes lo hacen sistemáticamente','La mayoría lo hace pero no todos','Algunos docentes lo hacen ocasionalmente','No, los docentes no articulan CI en sus planeaciones']},
+      {id:'r_fi_estado',t:'radio',g:'r_fi',label:'¿Cómo está la formación integral en el EE?',opts:['Integrada y transversal — permea el currículo y la cultura escolar','Parcialmente integrada — en algunas áreas o proyectos','Como actividades adicionales — no está en el currículo','No existe una estrategia de formación integral definida']},
+      {id:'r_ci_nuevo',t:'chips',label:'¿Qué CI nuevo necesita el EE para fortalecer la formación integral?',opts:['Proyecto ambiental o huerta','Club cultural y artístico','Semillero deportivo','Tecnología y emprendimiento','Orientación vocacional','Proyecto de identidad territorial','Bienestar socioemocional']},
+    ]},
+    {titulo:'Metas, liderazgo y alineación',sub:'Sus prioridades y percepción sobre la comunidad',campos:[
+      {id:'r_metas',t:'chips',label:'¿Cuáles son sus metas concretas para este año?',opts:['Actualizar y socializar el PEI','Fortalecer o crear nuevos CI','Mejorar resultados de aprendizaje','Reducir deserción escolar','Fortalecer relación con familias','Articular el EE con aliados del territorio','Mejorar la convivencia y el clima escolar']},
+      {id:'r_liderazgo',t:'radio',g:'r_l',label:'¿Cómo describe su estilo de liderazgo?',opts:['Participativo — tomo decisiones con el equipo y la comunidad','Transformacional — inspiro hacia una visión compartida','Directivo — establezco metas y superviso su cumplimiento','Situacional — me adapto según las circunstancias']},
+      {id:'r_per_doc',t:'radio',g:'r_pd',label:'¿Cómo percibe el nivel de motivación de los docentes?',opts:['Alto — comprometidos y motivados','Medio — hay motivación pero también apatía','Bajo — hay desmotivación generalizada','Muy bajo — hay conflictos o resistencia']},
+      {id:'r_per_est',t:'radio',g:'r_pe',label:'¿Cómo percibe el nivel de interés de los estudiantes?',opts:['Alto — participan activamente','Medio — hay interés pero también apatía','Bajo — hay desmotivación','Muy bajo — hay ausentismo o conflictos frecuentes']},
+      {id:'r_alin',t:'radio',g:'r_al',label:'¿Su visión está alineada con los intereses de docentes y estudiantes?',opts:['Sí, hay mucha coincidencia','Parcialmente — coincidimos en algunas cosas','Poco — hay diferencias importantes','No lo sé — no hemos tenido esa conversación']},
+    ]},
+    {titulo:'Tu voz',sub:'',campos:[
+      {id:'r_apoyo',t:'chips',label:'¿Qué apoyo necesita del tutor/a y de la CDA?',opts:['Acompañamiento en actualización del PEI','Apoyo para diseñar o fortalecer CI','Formación docente en metodologías activas','Articulación CI con currículo y proyectos transversales','Apoyo para mejorar convivencia y clima escolar','Conexión con aliados intersectoriales']},
+      {id:'r_palabra',t:'texto',label:'En una palabra, ¿qué significa la escuela para usted?',ph:'Escribe una palabra...'},
+    ]},
+    {titulo:'',sub:'',campos:[]}
+  ]
+};
+
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
+function togC(el){el.classList.toggle('on');}
+function getC(id){const el=document.getElementById(id);if(!el)return'—';return[...el.querySelectorAll('.chip.on')].map(c=>c.textContent.trim()).join(', ')||'—';}
+function selR(el,g){document.querySelectorAll('[data-rg="'+g+'"]').forEach(r=>r.classList.remove('sel'));el.setAttribute('data-rg',g);el.classList.add('sel');}
+function getR(g){const s=document.querySelector('[data-rg="'+g+'"].sel');return s?s.querySelector('span').textContent.trim():'—';}
+function selActor(a,el){actor=a;document.querySelectorAll('.acard').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function checkPin(){const v=document.getElementById('pin-input').value;if(v===PIN_OK){document.getElementById('pin-error').style.display='none';loadPanel();showView('v-panel');}else{document.getElementById('pin-error').style.display='block';}}
+function switchTab(id){document.querySelectorAll('.panel-tab').forEach((t,i)=>{const ids=['tab-ee','tab-semaforo','tab-intereses','tab-necesidades','tab-calor','tab-cda'];t.classList.toggle('active',ids[i]===id);});document.querySelectorAll('.panel-section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function renderSeccion(idx,cid,nid){
+  const secs=SECS[actor];const sec=secs[idx];if(!sec||!sec.titulo)return;
+  const total=secs.filter(s=>s.titulo).length;
+  const isLast=secs.slice(idx+1).every(s=>!s.titulo);
+  let html=`<div class="tag">Paso ${idx+2} de ${total+1}</div><div class="step-hdr">${sec.titulo}</div>${sec.sub?`<div class="step-sub">${sec.sub}</div>`:''}<div class="card"><div class="sec-title">${sec.titulo}</div>`;
+  sec.campos.forEach(f=>{
+    html+=`<div class="field"><label>${f.label}</label>`;
+    if(f.t==='chips'){html+=`<div class="chips" id="${f.id}">${f.opts.map(o=>`<div class="chip" onclick="togC(this)">${o}</div>`).join('')}</div>`;}
+    else if(f.t==='radio'){html+=f.opts.map(o=>`<div class="ropt" onclick="selR(this,'${f.g}')"><span>${o}</span></div>`).join('');}
+    else{html+=`<textarea id="${f.id}" placeholder="${f.ph}"></textarea>`;}
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById(cid).innerHTML=html;
+  document.getElementById(nid).innerHTML=`
+    <button class="btn" onclick="showView('v-s${idx===0?'0':idx}')">← Atrás</button>
+    <span class="nav-info">Paso ${idx+2} de ${total+1}</span>
+    ${isLast?`<button class="btn btn-primary" onclick="enviar()">Enviar respuesta →</button>`:`<button class="btn btn-primary" onclick="irSeccion(${idx+1})">Continuar →</button>`}`;
+}
+
+function irS1(){if(!actor){alert('Por favor selecciona tu rol.');return;}if(!document.getElementById('ee_nombre').value.trim()){alert('Por favor escribe el nombre del EE.');return;}renderSeccion(0,'s1-content','s1-nav');showView('v-s1');}
+function irSeccion(idx){const vids=['v-s1','v-s2','v-s3','v-s4','v-s5'];const cids=['s1-content','s2-content','s3-content','s4-content','s5-content'];const nids=['s1-nav','s2-nav','s3-nav','s4-nav','s5-nav'];renderSeccion(idx,cids[idx],nids[idx]);showView(vids[idx]);}
+
+function getAllData(){
+  const d={ts:Date.now(),actor,ee:document.getElementById('ee_nombre').value||'EE sin nombre',municipio:document.getElementById('municipio').value,subregion:document.getElementById('subregion').value,zona:document.getElementById('zona').value,campos:{}};
+  SECS[actor].forEach(sec=>{sec.campos.forEach(f=>{if(f.t==='chips'){d.campos[f.id]=getC(f.id);}else if(f.t==='radio'){d.campos[f.id]=getR(f.g);}else{const el=document.getElementById(f.id);d.campos[f.id]=el?el.value:'';}});});
+  return d;
+}
+
+async function enviar(){
+  const d=getAllData();
+  if(GOOGLE_SCRIPT_URL==='TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUI'){
+    alert('⚠️ Configura la URL de Google Apps Script en el archivo index.html');return;
+  }
+  const btn=document.querySelector('#v-s5 .btn-primary, #v-s4 .btn-primary, #v-s3 .btn-primary, #v-s2 .btn-primary, #v-s1 .btn-primary');
+  if(btn){btn.textContent='Enviando...';btn.disabled=true;}
+  try{
+    await fetch(GOOGLE_SCRIPT_URL,{method:'POST',body:JSON.stringify(d),headers:{'Content-Type':'application/json'},mode:'no-cors'});
+    showView('v-gracias');
+  }catch(e){
+    alert('Error al enviar. Verifica tu conexión e intenta de nuevo.');
+    if(btn){btn.textContent='Enviar respuesta →';btn.disabled=false;}
+  }
+}
+
+function resetForm(){actor='';document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));document.querySelectorAll('.ropt.sel').forEach(r=>r.classList.remove('sel'));document.querySelectorAll('.acard.sel').forEach(a=>a.classList.remove('sel'));document.querySelectorAll('input[type=text],input[type=number],textarea').forEach(i=>i.value='');showView('v-s0');}
+
+async function loadPanel(){
+  if(GOOGLE_SCRIPT_URL==='TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUI'){document.getElementById('panel-list').innerHTML='<p style="color:#a32d2d;font-size:13px">⚠️ Configura la URL de Google Apps Script primero.</p>';return;}
+  try{
+    const resp=await fetch(GOOGLE_SCRIPT_URL+'?action=getAll');
+    const all=await resp.json();
+    renderPanel(all);
+  }catch(e){document.getElementById('panel-list').innerHTML='<p style="color:#a32d2d;font-size:13px">Error al cargar datos. Verifica la configuración.</p>';}
+}
+
+function renderPanel(all){
+  const ees=[...new Set(all.map(r=>r.ee))];
+  const actores=['rector','docente','estudiante','familia'];
+  const aL={rector:'Rector/a',docente:'Docente',estudiante:'Estudiante',familia:'Familia'};
+  document.getElementById('panel-stats').innerHTML=`
+    <div class="met"><div class="v">${ees.length}</div><div class="l">EE registrados</div></div>
+    <div class="met"><div class="v">${all.length}</div><div class="l">Respuestas totales</div></div>
+    <div class="met"><div class="v">${ees.filter(e=>{const rs=all.filter(r=>r.ee===e);return actores.every(a=>rs.some(r=>r.actor===a));}).length}</div><div class="l">Listos para analizar</div></div>`;
+
+  document.getElementById('panel-list').innerHTML=!ees.length?'<p style="font-size:13px;color:#888">Aún no hay respuestas registradas.</p>':
+    ees.map(ee=>{
+      const rs=all.filter(r=>r.ee===ee);const last=rs[rs.length-1];
+      const listo=actores.every(a=>rs.some(r=>r.actor===a));
+      return`<div class="ee-row">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a">${ee}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">${last.subregion||'—'} · ${last.municipio||'—'} · <strong>${rs.length} respuesta${rs.length!==1?'s':''}</strong></div>
+          <div class="actor-pills">${actores.map(a=>{const n=rs.filter(r=>r.actor===a).length;return`<span class="actor-pill${n>0?' filled':''}">${aL[a]}: ${n}</span>`;}).join('')}</div>
+        </div>
+        <div style="flex-shrink:0;margin-top:4px">
+          ${listo?`<button class="btn btn-primary" onclick="consolidar('${ee.replace(/'/g,"\\'")}',window._allData)">Analizar (${rs.length}) ↗</button>`:`<span class="badge b-warn">Faltan actores</span>`}
+        </div>
+      </div>`;
+    }).join('');
+
+  window._allData=all;
+  renderSemaforo(all,ees);
+  renderIntereses(all);
+  renderNecesidades(all);
+  renderCalor(all,ees);
+}
+
+function renderSemaforo(all,ees){
+  document.getElementById('semaforo-content').innerHTML=!ees.length?'<p style="font-size:13px;color:#888">Sin datos.</p>':
+    ees.map(ee=>{
+      const rs=all.filter(r=>r.ee===ee);
+      const rector=rs.find(r=>r.actor==='rector');
+      const alin=rector?.campos?.r_alin||'';
+      let color='s-amarillo',txt='Sin datos del rector/a';
+      if(alin.includes('mucha coincidencia'))color='s-verde',txt='Alta alineación';
+      else if(alin.includes('Parcialmente'))color='s-amarillo',txt='Alineación parcial';
+      else if(alin.includes('Poco')||alin.includes('No lo sé'))color='s-rojo',txt='Alineación baja';
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #e5e5e0;border-radius:8px;margin-bottom:6px;background:#fff">
+        <div><div style="font-size:13px;font-weight:600;color:#1a1a1a">${ee}</div><div style="font-size:12px;color:#888;margin-top:2px">${rs.find(r=>r.actor==='rector')?.campos?.r_per_doc?'Motivación docentes: '+rs.find(r=>r.actor==='rector').campos.r_per_doc:''}</div></div>
+        <div style="display:flex;align-items:center;gap:6px"><span class="semaforo ${color}"></span><span style="font-size:12px;color:#666">${txt}</span></div>
+      </div>`;
+    }).join('');
+}
+
+function renderIntereses(all){
+  const est=all.filter(r=>r.actor==='estudiante');
+  if(!est.length){document.getElementById('intereses-content').innerHTML='<p style="font-size:13px;color:#888">Sin respuestas de estudiantes.</p>';return;}
+  const map={};
+  est.forEach(r=>{(r.campos?.e_act||'').split(', ').forEach(a=>{if(a&&a!=='—')map[a]=(map[a]||0)+1;});});
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const max=sorted[0]?sorted[0][1]:1;
+  document.getElementById('intereses-content').innerHTML=`<p style="font-size:12px;color:#888;margin-bottom:1rem">${est.length} estudiantes de ${[...new Set(est.map(r=>r.ee))].length} EE.</p>`+
+    sorted.map(([k,v])=>`<div class="bar-wrap"><div class="bar-label">${k}</div><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/max*100)}%"></div></div><div class="bar-pct">${v} estudiante${v!==1?'s':''}</div></div>`).join('');
+}
+
+function renderNecesidades(all){
+  const map={};
+  all.forEach(r=>{['d_cap','f_form','r_ci_nuevo','e_hab'].forEach(c=>{(r.campos?.[c]||'').split(', ').forEach(v=>{if(v&&v!=='—')map[v]=(map[v]||0)+1;});});});
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const max=sorted[0]?sorted[0][1]:1;
+  document.getElementById('necesidades-content').innerHTML=!sorted.length?'<p style="font-size:13px;color:#888">Sin datos.</p>':
+    `<p style="font-size:12px;color:#888;margin-bottom:1rem">Necesidades mencionadas en toda la CDA.</p>`+
+    sorted.map(([k,v])=>`<div class="bar-wrap"><div class="bar-label">${k}</div><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/max*100)}%"></div></div><div class="bar-pct">${v} mención${v!==1?'es':''}</div></div>`).join('');
+}
+
+function renderCalor(all,ees){
+  if(!ees.length){document.getElementById('calor-content').innerHTML='<p style="font-size:13px;color:#888">Sin datos.</p>';return;}
+  const dims=['Participación CI','Articulación PEI-CI','Formación integral','Bienestar docente','Relación familias','Clima emocional'];
+  const getScore=(ee,dim)=>{
+    const rs=all.filter(r=>r.ee===ee);
+    if(dim==='Participación CI'){const v=rs.find(r=>r.actor==='rector')?.campos?.r_ci_num||'';return v.includes('60')?4:v.includes('40')?3:v.includes('20%')?2:1;}
+    if(dim==='Articulación PEI-CI'){const v=rs.find(r=>r.actor==='rector')?.campos?.r_ci_pei||'';return v.includes('coherencia')?4:v.includes('Parcialmente')?3:v.includes('proceso')?2:1;}
+    if(dim==='Formación integral'){const v=rs.find(r=>r.actor==='rector')?.campos?.r_fi_estado||'';return v.includes('Integrada')?4:v.includes('Parcialmente')?3:v.includes('adicionales')?2:1;}
+    if(dim==='Bienestar docente'){const docs=rs.filter(r=>r.actor==='docente');if(!docs.length)return 0;const b=docs.filter(r=>(r.campos?.d_emoc||'').match(/Muy bien|Bien,/));return Math.min(4,Math.round(b.length/docs.length*4)+1);}
+    if(dim==='Relación familias'){const fams=rs.filter(r=>r.actor==='familia');if(!fams.length)return 0;const b=fams.filter(r=>(r.campos?.f_rdoc||'').match(/Muy buena|Buena,/));return Math.min(4,Math.round(b.length/fams.length*4)+1);}
+    if(dim==='Clima emocional'){const ests=rs.filter(r=>r.actor==='estudiante');if(!ests.length)return 0;const b=ests.filter(r=>(r.campos?.e_bien||'').match(/Muy bien|Bien,/));return Math.min(4,Math.round(b.length/ests.length*4)+1);}
+    return 2;
+  };
+  const cc=s=>s<=1?'hc1':s<=2?'hc2':s<=3?'hc3':'hc4';
+  const ct=s=>s<=1?'Bajo':s<=2?'Medio':s<=3?'Bueno':'Alto';
+  document.getElementById('calor-content').innerHTML=`<p style="font-size:12px;color:#888;margin-bottom:.75rem">Basado en respuestas de todos los actores.</p><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:6px 8px;color:#888;font-weight:500">Dimensión</th>${ees.map(ee=>`<th style="padding:6px 8px;color:#888;font-weight:500;text-align:center">${ee.split(' ').slice(0,2).join(' ')}</th>`).join('')}</tr>${dims.map(dim=>`<tr><td style="padding:6px 8px;color:#1a1a1a;font-weight:500">${dim}</td>${ees.map(ee=>{const s=getScore(ee,dim);return`<td style="padding:4px"><div class="heatmap-cell ${cc(s)}">${ct(s)}</div></td>`;}).join('')}</tr>`).join('')}</table></div>`;
+}
+
+async function consolidar(ee,all){
+  showView('v-result');
+  const rc=document.getElementById('result-content');
+  const rs=all.filter(r=>r.ee===ee);
+  rc.innerHTML=`<div class="loading-state"><div class="spin"></div> Generando análisis de <strong>${ee}</strong> con ${rs.length} respuestas...</div>`;
+  if(ANTHROPIC_API_KEY==='TU_API_KEY_DE_ANTHROPIC_AQUI'){rc.innerHTML='<div class="error-msg">⚠️ Configura tu API Key de Anthropic en el archivo index.html</div>';return;}
+  const last=rs[rs.length-1];
+  const pa=a=>rs.filter(r=>r.actor===a).map(r=>JSON.stringify(r.campos)).join(' | ')||'Sin respuesta';
+  const prompt=`Eres experto en PTAFI 3.0 del MEN Colombia con profundo conocimiento del departamento de Bolívar y sus territorios.
+Genera ANÁLISIS INSTITUCIONAL PROFUNDO para: ${ee} (${last.subregion||'—'}, ${last.municipio||'—'}).
+Respondentes: ${rs.length} — Rector/a: ${rs.filter(r=>r.actor==='rector').length}, Docentes: ${rs.filter(r=>r.actor==='docente').length}, Estudiantes: ${rs.filter(r=>r.actor==='estudiante').length}, Familias: ${rs.filter(r=>r.actor==='familia').length}
+RECTOR/A: ${pa('rector')} | DOCENTES: ${pa('docente')} | ESTUDIANTES: ${pa('estudiante')} | FAMILIAS: ${pa('familia')}
+Genera EXACTAMENTE estas 8 secciones:
+## 1. DIAGNÓSTICO CONTEXTUAL
+## 2. ANÁLISIS DE ALINEACIÓN DIRECTIVA
+## 3. INTERESES POR ACTOR
+## 4. ESTADO DE LOS CENTROS DE INTERÉS
+## 5. NECESIDADES FORMATIVAS CONSOLIDADAS
+## 6. BIENESTAR SOCIOEMOCIONAL
+## 7. PLAN DE ACCIÓN INSTITUCIONAL
+## 8. PROPUESTA DE CI PARA EL PFI-EE
+Sé específico. No uses asteriscos.`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'Sin resultado.';
+    const secs=text.split(/##\s+\d+\.\s+/).filter(s=>s.trim());
+    const titles=['Diagnóstico contextual','Análisis de alineación directiva','Intereses por actor','Estado de los Centros de Interés','Necesidades formativas consolidadas','Bienestar socioemocional','Plan de acción institucional','Propuesta de CI para el PFI-EE'];
+    const actores=['rector','docente','estudiante','familia'];
+    const aL={rector:'Rector/a',docente:'Docente',estudiante:'Estudiante',familia:'Familia'};
+    let html=`<div class="card" style="margin-bottom:.75rem">
+      <div style="font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:2px">${ee}</div>
+      <div style="font-size:12px;color:#888">${last.subregion||'—'} · ${last.municipio||'—'} · ${rs.length} respondentes</div>
+      <div class="divider"></div>
+      <div class="met-grid">
+        <div class="met"><div class="v">${rs.length}</div><div class="l">Respondentes</div></div>
+        <div class="met"><div class="v">${rs.filter(r=>r.actor==='estudiante').length}</div><div class="l">Voces estudiantiles</div></div>
+        <div class="met"><div class="v">${actores.filter(a=>rs.some(r=>r.actor===a)).length}/4</div><div class="l">Tipos de actor</div></div>
+      </div>
+      <div>${actores.map(a=>{const n=rs.filter(r=>r.actor===a).length;return`<span class="badge ${n>0?'b-ok':'b-warn'}">${aL[a]}: ${n}</span>`;}).join('')}</div>
+    </div>`;
+    secs.forEach((sec,i)=>{
+      const lines=sec.trim().split('\n').filter(l=>l.trim());
+      const body=lines.some(l=>l.trim().startsWith('-')||l.trim().match(/^\d+\./))
+        ?'<ul>'+lines.map(l=>`<li>${l.replace(/^[-*·]\s*/,'').replace(/^\d+\.\s*/,'')}</li>`).join('')+'</ul>'
+        :lines.map(l=>`<p style="margin-bottom:5px">${l}</p>`).join('');
+      html+=`<div class="rcrd"><h4>${titles[i]||'Análisis'}</h4>${body}</div>`;
+    });
+    rc.innerHTML=html;
+  }catch(e){rc.innerHTML='<div class="error-msg">Error al conectar con el motor de análisis. Verifica tu API Key.</div>';}
+}
+
+async function analizarCDA(){
+  const all=window._allData||[];
+  const ees=[...new Set(all.map(r=>r.ee))];
+  if(!ees.length){document.getElementById('cda-result').innerHTML='<p style="color:#a32d2d;font-size:13px">No hay datos suficientes.</p>';return;}
+  document.getElementById('cda-result').innerHTML=`<div class="loading-state"><div class="spin"></div> Generando análisis de la CDA con ${all.length} respuestas de ${ees.length} EE...</div>`;
+  if(ANTHROPIC_API_KEY==='TU_API_KEY_DE_ANTHROPIC_AQUI'){document.getElementById('cda-result').innerHTML='<div class="error-msg">⚠️ Configura tu API Key de Anthropic.</div>';return;}
+  const resumen=ees.map(ee=>{const rs=all.filter(r=>r.ee===ee);return`${ee}: ${rs.length} resp.`;}).join(' | ');
+  const prompt=`Eres experto en PTAFI 3.0 del MEN Colombia. Genera ANÁLISIS GENERAL CDA CURRAMBA 2.0 con ${all.length} respuestas de ${ees.length} EE: ${ees.join(', ')}. Resumen: ${resumen}. Genera: ## 1. DIAGNÓSTICO GENERAL ## 2. INTERESES COMUNES Y DIVERGENTES ## 3. NECESIDADES FORMATIVAS PRIORITARIAS ## 4. ESTADO DE CI EN LA CDA ## 5. ANÁLISIS DE ALINEACIÓN DIRECTIVA ## 6. PLAN DE FORMACIÓN INTEGRAL PARA LA CDA ## 7. EE SIMILARES Y EE ATÍPICOS ## 8. RECOMENDACIONES PARA EL TUTOR/A. No uses asteriscos.`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_API_KEY,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'Sin resultado.';
+    const secs=text.split(/##\s+\d+\.\s+/).filter(s=>s.trim());
+    const titles=['Diagnóstico general','Intereses comunes y divergentes','Necesidades formativas prioritarias','Estado de CI en la CDA','Análisis de alineación directiva','Plan de Formación Integral','EE similares y EE atípicos','Recomendaciones para el tutor/a'];
+    document.getElementById('cda-result').innerHTML=secs.map((sec,i)=>{
+      const lines=sec.trim().split('\n').filter(l=>l.trim());
+      const body=lines.some(l=>l.trim().startsWith('-'))?'<ul>'+lines.map(l=>`<li>${l.replace(/^[-*]\s*/,'')}</li>`).join('')+'</ul>':lines.map(l=>`<p style="margin-bottom:5px">${l}</p>`).join('');
+      return`<div class="rcrd"><h4>${titles[i]||'Análisis'}</h4>${body}</div>`;
+    }).join('');
+  }catch(e){document.getElementById('cda-result').innerHTML='<div class="error-msg">Error al conectar.</div>';}
+}
+</script>
+</body>
+</html>
